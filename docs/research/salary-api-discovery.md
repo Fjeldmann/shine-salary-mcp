@@ -49,6 +49,7 @@ v1 targets `api.salary.dk` only.
 
      A **read-only key** is possible: turn off "Fuld skriveadgang".
    - A probe with a zero UUID client returned `NotFound: API Client not found`. A random string as `Authorization` returned 401.
+   - Verified with a real read-only company key (2026-11-03): the key alone is rejected as `Authorization` (401) and as `?apiKey=` (401), and `POST /v2/auth` with only `apiKey` returns `login.apiClientID in body is required`. **An API client is required.**
 
 ## Endpoints the web app calls (observed)
 
@@ -76,4 +77,4 @@ The token from the browser login was captured at about 18:05 UTC. After 18:20 it
 
 - The **only durable, supported, read-only-scoped** credential is a **company API key with read scopes**, used through an **API client** registered with Salary. That credential is stored once in the OS keychain, and access tokens of about 1 hour are refreshed silently with `POST /v2/auth`. This setup meets the goal of "authenticate once, survives reboots".
 - **Browser session capture** gives you a token of about 1 hour, held in a cookie that dies with the browser. On its own it cannot survive a restart without logging in again. It works as an "interactive mode" or bootstrap while the API client registration is pending.
-- **Stored email/password plus `trustDevice`/`deviceToken`** could renew silently for 30 days if Turnstile is not enforced for API logins. But it means storing a password and depending on an endpoint that is "not yet publicly available". It is a fallback only, and it needs explicit opt-in.
+- **Stored email/password plus `trustDevice`/`deviceToken`** could renew silently for 30 days if Turnstile is not enforced for API logins. But it means storing a password and depending on an endpoint that is "not yet publicly available". It is a fallback only, and it needs explicit opt-in. **Rejected for v1 (user decision, 2026-11-03).**

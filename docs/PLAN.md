@@ -35,7 +35,7 @@ Create these files and directories:
 | `src/server.ts` | SDK registration, schemas, annotations, deterministic tool list, stdio lifecycle. |
 | `src/auth/store.ts`, `keyring.ts`, `encrypted-file.ts` | Versioned secret records, secure persistence, migration, atomic replacement. |
 | `src/auth/token-manager.ts`, `lock.ts` | Expiry, renewal, cross-process coordination, credential generations. |
-| `src/auth/api-client.ts`, `browser-login.ts`, `password-login.ts` | Separate authentication mechanisms and narrowly permitted auth requests. |
+| `src/auth/api-client.ts`, `browser-login.ts` | Separate authentication mechanisms and narrowly permitted auth requests. |
 | `src/api/client.ts`, `allowlist.ts`, `schemas.ts` | Fixed-origin GET transport, endpoint/query policies, response validation. |
 | `src/domain/` | Company ownership checks, employee resolution, joins, pagination, money/date handling. |
 | `src/tools/` | One module per task-shaped tool and shared result schemas. |
@@ -54,7 +54,7 @@ Use the raw header **`Authorization: <token>`**, without `Bearer`. Never use que
 
 Maintain an explicit allowlist containing only the endpoints below. GET alone is insufficient: exclude sensitive or potentially consequential endpoints such as recovery-code retrieval, invitations, and report generation.
 
-Only the auth adapter may POST to `/v2/auth`. The experimental password adapter may POST to `/v2/login` when explicitly enabled. Neither adapter accepts arbitrary paths or bodies from tools.
+Only the auth adapter may POST, and only to `/v2/auth`. It does not accept arbitrary paths or bodies from tools.
 
 Apply bounded response sizes, deadlines, cancellation, concurrency limits, and capped jittered retries for 429 and transient 5xx responses. Respect `Retry-After`; do not retry permission failures. Set an overall request budget so pagination and joins cannot expand indefinitely.
 
@@ -108,7 +108,7 @@ For encrypted-file storage, use `$XDG_CONFIG_HOME/shine-mcp/` or the platform eq
 
 **Never store an unprotected decryption key beside the ciphertext or derive it from public machine identifiers.**
 
-On WSL2, test Secret Service availability first. For unattended reboot persistence, support a tested Windows Credential Manager/DPAPI helper protecting the wrapping key, with secrets passed through private IPC rather than arguments. If neither secure backend works, passphrase encryption is supported, but requires unlocking after reboot; it avoids repeated Salary authentication, not local unlocking. `serve` fails promptly with an unlock instruction rather than prompting over stdio. Unattended WSL support is a release gate, not an assumed property of encryption.
+On WSL2, test Secret Service availability first. **Decided (2026-11-03): Windows Credential Manager is an approved backend.** For unattended reboot persistence, support a tested Windows Credential Manager/DPAPI helper protecting the wrapping key, with secrets passed through private IPC rather than arguments. If neither secure backend works, passphrase encryption is supported, but requires unlocking after reboot; it avoids repeated Salary authentication, not local unlocking. `serve` fails promptly with an unlock instruction rather than prompting over stdio. Unattended WSL support is a release gate, not an assumed property of encryption.
 
 ### Token renewal and concurrency
 
@@ -118,7 +118,7 @@ On 401, invalidate the affected token, renew once, and replay the GET once. A se
 
 All auth changes share the lock. Generation checks prevent an old process from restoring credentials after logout.
 
-### Browser bootstrap and experimental password fallback
+### Browser bootstrap
 
 `shine-mcp login --method browser` launches headed Playwright at `app.salary.dk`; the user completes Turnstile/MFA. Capture `sally_access_token` and validate it through an allowed GET.
 
@@ -128,7 +128,7 @@ The token-lifetime probe is pending. A session cookie's lack of `Expires` does n
 
 If the probe establishes a long-lived token, securely reuse it across restarts until rejection. If sliding validity is established, update expiry tracking from verified behavior; do not add artificial keepalive traffic. Neither finding replaces the durable API credential recommendation.
 
-Email/password plus `deviceToken` remains an explicitly enabled experimental fallback. It depends on `/v2/login`, marked “not yet public.” Persist a password only after explicit opt-in; never retain MFA/recovery codes. Turnstile, MFA, or expired device trust returns control to foreground login rather than attempting bypasses.
+**Decided (2026-11-03): no email/password fallback in v1.** The server never stores a password and never calls `POST /v2/login`. Turnstile, MFA, or an expired session returns control to the foreground browser login rather than attempting bypasses.
 
 ### CLI errors and logout
 
@@ -178,13 +178,15 @@ Authenticate in the same OS/user/distribution context first. Verify WSL launch p
 2. **Establish the boundary:** scaffold CLI/SDK, endpoint allowlist, schemas, redaction, and negative transport tests.
 3. **Complete durable auth:** secure stores, WSL helper, locking, renewal, status/logout, and reboot tests. This gates the persistence promise.
 4. **Implement tools:** company discovery first, then employee resolution, payroll/payslip joins, and time summaries.
-5. **Add interactive modes:** protected browser bootstrap; experimental password fallback remains disabled by default.
+5. **Add interactive mode:** protected browser bootstrap.
 6. **Release validation:** Inspector, evals, client matrix, packaging, installation/logout rehearsal, and security documentation.
 
 Main risks are API-client approval delays, incomplete read scopes, unavailable WSL secure storage, browser/MFA changes, SDK/client compatibility, API schema drift, and inconsistent multi-request snapshots. None justifies plaintext credentials, broader endpoints, or silent data omission.
 
-Resolve with the user during implementation: which companies and read scopes are needed; which clients/OS contexts must work; whether Windows-backed storage is acceptable; whether passphrase unlocking is acceptable when unavailable; and whether experimental password storage is wanted. Safe defaults allow the core work to proceed.
+Decided with the user (2026-11-03): Windows Credential Manager is an acceptable storage backend on WSL; no email/password fallback in v1; a read-only company API key has been created, and an API-client request to dev@salary.dk is being sent (verified: the key alone is rejected, `/v2/auth` requires `apiClientID`).
+
+Still to resolve during implementation: which companies and read scopes are needed; which clients/OS contexts must work; and whether passphrase unlocking is acceptable where no secure backend exists.
 
 ## 10. Explicitly out of scope
 
-Payroll creation/approval, payments, employee edits, uploads, credential administration, arbitrary API access, undocumented business endpoints, PDF/HTML/CSV exports, raw CPR/bank disclosure, background synchronization, persistent payroll caches, remote HTTP hosting, multi-user operation, OAuth-provider implementation, and automatic CAPTCHA/MFA bypass.
+Payroll creation/approval, payments, employee edits, uploads, credential administration, arbitrary API access, undocumented business endpoints, PDF/HTML/CSV exports, raw CPR/bank disclosure, background synchronization, persistent payroll caches, remote HTTP hosting, multi-user operation, OAuth-provider implementation, email/password login, and automatic CAPTCHA/MFA bypass.
