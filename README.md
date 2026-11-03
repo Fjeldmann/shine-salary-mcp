@@ -1,4 +1,4 @@
-# shine-mcp
+# shine-salary-mcp
 
 This is a local [Model Context Protocol](https://modelcontextprotocol.io) server. It gives an AI assistant **read-only** access to a [Shine Salary](https://app.salary.dk) account. Shine Salary was formerly Salary.dk.
 

@@ -1,4 +1,4 @@
-# shine-mcp v1 plan
+# shine-salary-mcp v1 plan
 
 ## 1. Scope and architecture
 
@@ -85,7 +85,7 @@ Declare input/output schemas and return matching `structuredContent` plus a text
 
 ### Primary: durable API credentials
 
-`shine-mcp login --method api` securely prompts for `apiClientID`, `apiClientSecret`, and the company API key. Obtain the API client through `dev@salary.dk`; a company administrator creates the scoped key in Salary.
+`shine-salary-mcp login --method api` securely prompts for `apiClientID`, `apiClientSecret`, and the company API key. Obtain the API client through `dev@salary.dk`; a company administrator creates the scoped key in Salary.
 
 Require read-only provisioning and document the selected scopes. Confirm access with necessary GETs. Successful reads do **not** prove write access is absent: verify scopes through available authoritative metadata or the provisioning UI, never through a mutation probe.
 
@@ -99,7 +99,7 @@ Use a versioned secret record containing auth mode, credential material, company
 
 Prefer an OS keychain through a maintained library such as `@napi-rs/keyring`. Feature-test storage and retrieval; do not assume installation means an unlocked backend exists.
 
-For encrypted-file storage, use `$XDG_CONFIG_HOME/shine-mcp/` or the platform equivalent:
+For encrypted-file storage, use `$XDG_CONFIG_HOME/shine-salary-mcp/` or the platform equivalent:
 
 - Owner-only directory (`0700`) and files (`0600`), with equivalent Windows ACLs.
 - Versioned AES-256-GCM envelope: key identifier/KDF parameters, unique nonce, ciphertext, authentication tag; bind version/profile as associated data.
@@ -120,7 +120,7 @@ All auth changes share the lock. Generation checks prevent an old process from r
 
 ### Browser bootstrap
 
-`shine-mcp login --method browser` launches headed Playwright at `app.salary.dk`; the user completes Turnstile/MFA. Capture `sally_access_token` and validate it through an allowed GET.
+`shine-salary-mcp login --method browser` launches headed Playwright at `app.salary.dk`; the user completes Turnstile/MFA. Capture `sally_access_token` and validate it through an allowed GET.
 
 Offer the site's `trustDevice` option. Preserve a dedicated, encrypted browser profile between logins, restoring it only for the CLI. Store only necessary authentication state; block payroll fetches during capture and exclude browser caches, traces, screenshots, and downloaded data. A browser profile contains secrets and requires the same protection as credentials.
 
@@ -156,18 +156,18 @@ Security tests must reject mutation methods, unlisted GETs, unknown query parame
 
 Run SDK integration tests and MCP Inspector against the real stdio executable. Evaluate realistic prompts for company selection, payroll questions, ambiguous employees, insufficient scopes, expired auth, and injected notes. Use opt-in read-only live smoke tests; CI contains no real credentials or payroll fixtures.
 
-Publish a pinned npm release usable as `npx -y shine-mcp@<version> serve`. Build platform-appropriate `.mcpb` bundles, validating native keyring dependencies and optional browser installation. Follow the [MCPB specification and tooling](https://github.com/modelcontextprotocol/mcpb). Never bundle credentials.
+Publish a pinned npm release usable as `npx -y shine-salary-mcp@<version> serve`. Build platform-appropriate `.mcpb` bundles, validating native keyring dependencies and optional browser installation. Follow the [MCPB specification and tooling](https://github.com/modelcontextprotocol/mcpb). Never bundle credentials.
 
 Example desktop configuration:
 
 ```json
-{"mcpServers":{"shine":{"command":"npx","args":["-y","shine-mcp@<version>","serve"]}}}
+{"mcpServers":{"shine":{"command":"npx","args":["-y","shine-salary-mcp@<version>","serve"]}}}
 ```
 
 For a Windows client running the WSL installation:
 
 ```json
-{"mcpServers":{"shine":{"command":"wsl.exe","args":["-d","<distribution>","--","/absolute/path/to/shine-mcp","serve"]}}}
+{"mcpServers":{"shine":{"command":"wsl.exe","args":["-d","<distribution>","--","/absolute/path/to/shine-salary-mcp","serve"]}}}
 ```
 
 Authenticate in the same OS/user/distribution context first. Verify WSL launch paths, stderr isolation, and protocol compatibility in the documented client matrix.

@@ -1,6 +1,6 @@
 # MCP server best practices (November 2026)
 
-A compact research summary to guide shine-mcp v1. Before pinning a version, check it against the linked primary sources. The SDK version numbers came from search summaries.
+A compact research summary to guide shine-salary-mcp v1. Before pinning a version, check it against the linked primary sources. The SDK version numbers came from search summaries.
 
 ## Spec
 
@@ -40,7 +40,7 @@ Sources: [Anthropic, "Writing effective tools for agents"](https://www.anthropic
   - Truncate with a hint such as "N more, pass cursor=…".
   - Drop raw internal fields.
 - **Errors:**
-  - Return `isError: true` with a next step the model can act on, for example "Session expired: run `shine-mcp login`" or "Did you mean Jens Hansen (#12)?".
+  - Return `isError: true` with a next step the model can act on, for example "Session expired: run `shine-salary-mcp login`" or "Did you mean Jens Hansen (#12)?".
   - Never return stack traces.
 - **Evaluate:**
   - Write realistic prompts and check which tools the model picks and whether it gets the answer right.
@@ -54,7 +54,7 @@ Sources: [Anthropic, "Writing effective tools for agents"](https://www.anthropic
   - Backends: macOS Keychain, Windows Credential Manager, and Secret Service (libsecret) on Linux.
 - **WSL:**
   - WSL often has no Secret Service or D-Bus session.
-  - Detect that and fall back to an **encrypted file** under `$XDG_CONFIG_HOME/shine-mcp/`, created with mode `0600` and encrypted with AES-256-GCM.
+  - Detect that and fall back to an **encrypted file** under `$XDG_CONFIG_HOME/shine-salary-mcp/`, created with mode `0600` and encrypted with AES-256-GCM.
   - Take the key from a keychain where one exists. Otherwise use a passphrase or a machine-bound key, and warn about the weaker guarantee.
 - **Where secrets must not go:**
   - Never into the MCP client config JSON, `.env` files or logs.
@@ -76,7 +76,7 @@ Sources: [Anthropic, "Writing effective tools for agents"](https://www.anthropic
 
 The common pattern, used for example by [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) with `--storage-state`/`--user-data-dir`, and by many community MCPs:
 
-1. A separate CLI command (`shine-mcp login`) launches headed Playwright.
+1. A separate CLI command (`shine-salary-mcp login`) launches headed Playwright.
 2. The user completes the login, including any MFA or captcha.
 3. The command waits for an authenticated signal and captures the cookies or token.
 4. It stores them in the keychain.
