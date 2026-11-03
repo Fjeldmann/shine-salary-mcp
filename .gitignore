@@ -7,4 +7,3 @@ state.json
 output/
 .codex-brief.md
 .codex-plan.md
-!.env.example
