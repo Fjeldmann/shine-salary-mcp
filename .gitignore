@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env*
+*.storage-state.json
+state.json
+.playwright-cli/
+output/
+.codex-brief.md
+.codex-plan.md
