@@ -87,7 +87,7 @@ Declare input/output schemas and return matching `structuredContent` plus a text
 
 `shine-salary-mcp login --method api` securely prompts for `apiClientID`, `apiClientSecret`, and the company API key. Obtain the API client through `dev@salary.dk`; a company administrator creates the scoped key in Salary.
 
-Require read-only provisioning and document the selected scopes. Confirm access with necessary GETs. Successful reads do **not** prove write access is absent: verify scopes through available authoritative metadata or the provisioning UI, never through a mutation probe.
+Require read-only provisioning and document the selected scopes. Confirm access with necessary GETs. Successful reads do **not** prove write access is absent: verify scopes through available authoritative metadata or the provisioning UI, never through a mutation probe. `GET /v2/apiKeys?companyID=` is that metadata: it reports the key's `scopes` (verified 2026-11-04: `["ReadAll"]`). `status --check` should warn when the scopes contain anything other than read scopes.
 
 Persist the credential tuple once. Use `POST /v2/auth` to obtain approximately one-hour access tokens and repeat that exchange silently when needed. There is no refresh-token endpoint. Do not assume the returned `apiClientToken` is a refresh credential.
 
@@ -174,7 +174,7 @@ Authenticate in the same OS/user/distribution context first. Verify WSL launch p
 
 ## 9. Ordered milestones and decisions
 
-1. **Validate contracts:** pin dependencies, confirm minimum client versions, record token-probe results, request API-client registration, and confirm read scopes.
+1. **Validate contracts:** pin dependencies, confirm minimum client versions, record token-probe results, request API-client registration, and confirm read scopes. *API client registered and read scopes confirmed (2026-11-04); see the discovery doc.*
 2. **Establish the boundary:** scaffold CLI/SDK, endpoint allowlist, schemas, redaction, and negative transport tests.
 3. **Complete durable auth:** secure stores, WSL helper, locking, renewal, status/logout, and reboot tests. This gates the persistence promise.
 4. **Implement tools:** company discovery first, then employee resolution, payroll/payslip joins, and time summaries.
@@ -184,6 +184,8 @@ Authenticate in the same OS/user/distribution context first. Verify WSL launch p
 Main risks are API-client approval delays, incomplete read scopes, unavailable WSL secure storage, browser/MFA changes, SDK/client compatibility, API schema drift, and inconsistent multi-request snapshots. None justifies plaintext credentials, broader endpoints, or silent data omission.
 
 Decided with the user (2026-11-03): Windows Credential Manager is an acceptable storage backend on WSL; no email/password fallback in v1; a read-only company API key has been created, and an API-client request to dev@salary.dk is being sent (verified: the key alone is rejected, `/v2/auth` requires `apiClientID`).
+
+Done (2026-11-04): Salary registered the API client. `POST /v2/auth` returns an opaque access token with no expiry metadata and no `apiClientToken`; there are no rate-limit headers; the company key's scopes are `["ReadAll"]`. Salary does not offer API support, so undocumented behaviour stays out of scope. For local development the credentials live in an untracked `.env` (template: `.env.example`); the shipped CLI still uses the secure store.
 
 Still to resolve during implementation: which companies and read scopes are needed; which clients/OS contexts must work; and whether passphrase unlocking is acceptable where no secure backend exists.
 

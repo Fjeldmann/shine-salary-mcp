@@ -50,6 +50,20 @@ v1 targets `api.salary.dk` only.
      A **read-only key** is possible: turn off "Fuld skriveadgang".
    - A probe with a zero UUID client returned `NotFound: API Client not found`. A random string as `Authorization` returned 401.
    - Verified with a real read-only company key (2026-11-03): the key alone is rejected as `Authorization` (401) and as `?apiKey=` (401), and `POST /v2/auth` with only `apiKey` returns `login.apiClientID in body is required`. **An API client is required.**
+   - Salary registered the API client on 2026-11-04 and sent the client ID and secret by email. They state they **do not provide support** for using the API, and they did not answer our questions about token lifetime, rate limits or client-level scoping.
+
+### Verified with the registered API client (2026-11-04)
+
+| Fact | Evidence |
+|---|---|
+| An unknown `apiClientID` returns **404 `NotFound: API Client not found`**, even when the secret and key are present. The spec documents 401 for wrong credentials, so a 404 means the client ID itself is wrong. | First attempt with an incomplete client ID. |
+| `POST /v2/auth` with `apiClientID`, `apiClientSecret` and `apiKey` returns 200 with **only `accessToken`**. No `apiClientToken` and no `csrfToken` are returned. | Live call. |
+| The access token is an opaque 256-character string, **not a JWT**. There is no expiry in the token or the response, so lifetime must come from the spec ("around one hour") and 401 handling. | Live call. |
+| Responses carry **no rate-limit headers** (`X-RateLimit-*`, `RateLimit-*`, `Retry-After`). | Headers on `/v2/auth` and `/v2/companies`. |
+| `GET /v2/companies` returns exactly the one company bound to the key. | Live call. |
+| `GET /v2/apiKeys?companyID=` works with the key's own token and reports its scopes: **`["ReadAll"]`**. This is authoritative, non-mutating proof that the key has no write scope. | Live call. |
+| `GET /v2/employees?companyID=&limit=1` → 200. | Live call. |
+| `GET /v2/payRolls?companyID=` **requires `from`** (422, code 602, `from in query is required`). With `from` and `to` it returns 200. | Live call. |
 
 ## Endpoints the web app calls (observed)
 
@@ -75,6 +89,7 @@ The token from the browser login was captured at about 18:05 UTC. After 18:20 it
 
 ## Implications for v1
 
+- **Confirmed 2026-11-04:** the API client, secret and `ReadAll` company key work end to end.
 - The **only durable, supported, read-only-scoped** credential is a **company API key with read scopes**, used through an **API client** registered with Salary. That credential is stored once in the OS keychain, and access tokens of about 1 hour are refreshed silently with `POST /v2/auth`. This setup meets the goal of "authenticate once, survives reboots".
 - **Browser session capture** gives you a token of about 1 hour, held in a cookie that dies with the browser. On its own it cannot survive a restart without logging in again. It works as an "interactive mode" or bootstrap while the API client registration is pending.
 - **Stored email/password plus `trustDevice`/`deviceToken`** could renew silently for 30 days if Turnstile is not enforced for API logins. But it means storing a password and depending on an endpoint that is "not yet publicly available". It is a fallback only, and it needs explicit opt-in. **Rejected for v1 (user decision, 2026-11-03).**
