@@ -28,7 +28,8 @@
     "smoke:live": "node --env-file=.env dist/dev/live-smoke.js",
     "prepack": "npm run build",
     "rehearse": "bash scripts/rehearse-install.sh",
-    "bundle": "bash scripts/build-mcpb.sh"
+    "bundle": "bash scripts/build-mcpb.sh",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.4.0",
