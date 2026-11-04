@@ -109,7 +109,7 @@ it('keeps the token when the only waiting caller is cancelled', async () => {
 });
 
 describe('dev env credentials', () => {
-  const env = { 'API-CLIENT-ID': creds.apiClientID, 'API-CLIENT-SECRET': creds.apiClientSecret, 'API-KEY': creds.apiKey };
+  const env = { 'API_CLIENT_ID': creds.apiClientID, 'API_CLIENT_SECRET': creds.apiClientSecret, 'API_KEY': creds.apiKey };
 
   it('are off unless explicitly enabled', () => {
     expect(() => readDevEnvCredentials(env)).toThrow(/No credentials/);
@@ -120,6 +120,6 @@ describe('dev env credentials', () => {
   });
 
   it('name the missing variables', () => {
-    expect(() => readDevEnvCredentials({ SHINE_SALARY_DEV_ENV_CREDENTIALS: '1', 'API-KEY': 'x' })).toThrow(/API-CLIENT-ID, API-CLIENT-SECRET/);
+    expect(() => readDevEnvCredentials({ SHINE_SALARY_DEV_ENV_CREDENTIALS: '1', 'API_KEY': 'x' })).toThrow(/API_CLIENT_ID, API_CLIENT_SECRET/);
   });
 });

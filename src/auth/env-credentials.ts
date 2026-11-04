@@ -10,9 +10,9 @@ import type { ApiCredentials } from './api-client.js';
  */
 export const DEV_FLAG = 'SHINE_SALARY_DEV_ENV_CREDENTIALS';
 export const ENV_NAMES = {
-  apiClientID: 'API-CLIENT-ID',
-  apiClientSecret: 'API-CLIENT-SECRET',
-  apiKey: 'API-KEY',
+  apiClientID: 'API_CLIENT_ID',
+  apiClientSecret: 'API_CLIENT_SECRET',
+  apiKey: 'API_KEY',
 } as const;
 
 export function devEnvCredentialsEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
