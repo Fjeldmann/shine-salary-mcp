@@ -21,7 +21,7 @@ For development, `login --from-env` reads `API_CLIENT_ID`, `API_CLIENT_SECRET` a
 
 ## Where credentials live
 
-Files go under `$XDG_CONFIG_HOME/shine-salary-mcp/profiles/<profile>/` on Linux and WSL, `~/Library/Application Support/shine-salary-mcp/` on macOS, and `%APPDATA%\shine-salary-mcp\` on Windows. Directories are `0700` and files `0600`. Symlinks, files owned by another user, and group- or world-readable files are refused.
+Files go under `$XDG_CONFIG_HOME/shine-salary-mcp/profiles/<profile>/` on Linux and WSL, `~/Library/Application Support/shine-salary-mcp/` on macOS, and `%APPDATA%\shine-salary-mcp\` on Windows. Directories are `0700` and files `0600`. Native Windows (outside WSL) is untested: the permission checks assume POSIX modes. Symlinks, files owned by another user, and group- or world-readable files are refused.
 
 | Backend | Used when | What is stored |
 |---|---|---|
