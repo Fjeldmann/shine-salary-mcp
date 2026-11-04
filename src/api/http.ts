@@ -1,8 +1,9 @@
+import { NAME, VERSION } from '../version.js';
 import { SalaryError } from '../errors.js';
 
 export type FetchLike = (input: URL, init: RequestInit) => Promise<Response>;
 
-export const USER_AGENT = 'shine-salary-mcp/0.0.0';
+export const USER_AGENT = `${NAME}/${VERSION}`;
 
 /** Read a response body as text, failing once `maxBytes` is exceeded. */
 export async function readBodyCapped(res: Response, maxBytes: number, endpoint?: string): Promise<string> {

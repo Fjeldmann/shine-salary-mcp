@@ -118,7 +118,9 @@ On 401, invalidate the affected token, renew once, and replay the GET once. A se
 
 All auth changes share the lock. Generation checks prevent an old process from restoring credentials after logout.
 
-### Browser bootstrap
+### Browser bootstrap (dropped from v1, 2026-11-04)
+
+**Decided (2026-11-04): no browser login in v1.** A Playwright-driven login window was built (branch `feat/m5-browser-login`, not merged). Salary's Cloudflare Turnstile refuses automated browsers ("Sikkerhedstjekket blev blokeret"). Hiding the automation would mean bypassing a bot check, which this plan rules out. The API-key login covers every v1 need with a safer, read-only credential. The token-lifetime probe stays open. The original design is kept below for reference.
 
 `shine-salary-mcp login --method browser` launches headed Playwright at `app.salary.dk`; the user completes Turnstile/MFA. Capture `sally_access_token` and validate it through an allowed GET.
 
@@ -156,7 +158,7 @@ Security tests must reject mutation methods, unlisted GETs, unknown query parame
 
 Run SDK integration tests and MCP Inspector against the real stdio executable. Evaluate realistic prompts for company selection, payroll questions, ambiguous employees, insufficient scopes, expired auth, and injected notes. Use opt-in read-only live smoke tests; CI contains no real credentials or payroll fixtures.
 
-Publish a pinned npm release usable as `npx -y shine-salary-mcp@<version> serve`. Build platform-appropriate `.mcpb` bundles, validating native keyring dependencies and optional browser installation. Follow the [MCPB specification and tooling](https://github.com/modelcontextprotocol/mcpb). Never bundle credentials.
+Publish a pinned npm release usable as `npx -y shine-salary-mcp@<version> serve`. Build platform-appropriate `.mcpb` bundles, validating native keyring dependencies. Follow the [MCPB specification and tooling](https://github.com/modelcontextprotocol/mcpb). Never bundle credentials.
 
 Example desktop configuration:
 
@@ -178,8 +180,8 @@ Authenticate in the same OS/user/distribution context first. Verify WSL launch p
 2. **Establish the boundary:** scaffold CLI/SDK, endpoint allowlist, schemas, redaction, and negative transport tests. *Done (2026-11-04). Every allowlisted path was checked against `swagger.json`; `/v2/employments` and `/v2/paySlips/{id}` exist. `/v2/apiKeys` is undocumented and allowlisted only for the scope self-check, not for tools. `employees.nationalID` is excluded so a CPR number never appears in a URL.*
 3. **Complete durable auth:** secure stores, WSL helper, locking, renewal, status/logout, and reboot tests. This gates the persistence promise. *Implemented (2026-11-04), see [AUTH.md](AUTH.md): `keyring` backend (Secret Service forced on Linux, because the keyutils fallback is lost on reboot) and `wsl-dpapi` (AES-256-GCM files, key wrapped by Windows DPAPI via `powershell.exe`). Restart verified with a fresh process; a real Windows reboot is a manual check. Passphrase fallback deferred: `login` fails with `STORE_UNAVAILABLE` when neither backend works.*
 4. **Implement tools:** company discovery first, then employee resolution, payroll/payslip joins, and time summaries. *Done (2026-11-04). All six tools were run live against a real company. Deviations and time registrations were empty in the live data, so those paths are only tested with fixtures. `paySlips.list` omits `aggregates`, so the payslip tool fetches each payslip on the page (default 10, max 25). Payslip `fields` (CPR, address, e-mail, phone) are never read.*
-5. **Add interactive mode:** protected browser bootstrap.
-6. **Release validation:** Inspector, evals, client matrix, packaging, installation/logout rehearsal, and security documentation.
+5. ~~**Add interactive mode:** protected browser bootstrap.~~ *Dropped (2026-11-04): Turnstile blocks the automated login window; see §6.*
+6. **Release validation:** Inspector, evals, client matrix, packaging, installation/logout rehearsal, and security documentation. *Done (2026-11-04): `npm run rehearse` passes against the live API; `SECURITY.md`, `docs/CLIENTS.md`, `evals/scenarios.json` and CI (Ubuntu and macOS) added; the MCPB manifest passes the v0.3 schema. Open: MCP Inspector and `mcpb pack`/`validate` (they run external code via `npx` and need approval), real-client runs, manual evals, and the darwin bundle build on a Mac.*
 
 Main risks are API-client approval delays, incomplete read scopes, unavailable WSL secure storage, browser/MFA changes, SDK/client compatibility, API schema drift, and inconsistent multi-request snapshots. None justifies plaintext credentials, broader endpoints, or silent data omission.
 

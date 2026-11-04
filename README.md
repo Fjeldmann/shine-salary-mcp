@@ -2,7 +2,7 @@
 
 This is a local [Model Context Protocol](https://modelcontextprotocol.io) server. It gives an AI assistant **read-only** access to a [Shine Salary](https://app.salary.dk) account. Shine Salary was formerly Salary.dk.
 
-Status: **milestone 4 of 6** (tools). After a one-time `login` (see [`docs/AUTH.md`](docs/AUTH.md)), `serve` exposes six read-only tools over stdio.
+Status: **v0.1.0 release candidate** (milestone 6: release validation). Browser login was dropped from v1: Salary's Cloudflare check blocks automated login windows (see [`docs/PLAN.md`](docs/PLAN.md)). After a one-time `login` (see [`docs/AUTH.md`](docs/AUTH.md)), `serve` exposes six read-only tools over stdio.
 
 ## Tools
 
@@ -64,6 +64,12 @@ Both commands send only GET requests after logging in. They print company names,
 | `vitest` | 5.0.5 |
 | `@napi-rs/keyring` | 2.1.2 |
 | `@types/node` | 24.19.2 |
+
+## Using it
+
+See [`docs/CLIENTS.md`](docs/CLIENTS.md) for Claude Code and Claude Desktop (including Windows with WSL), [`SECURITY.md`](SECURITY.md) for the trust model, and [`packaging/`](packaging/) for the Claude Desktop extension bundle.
+
+To rehearse an installation, run `npm run rehearse`. It packs the package, installs it into a scratch directory and runs login, status, serve and logout against an isolated config directory, using `.env`.
 
 ## Docs
 

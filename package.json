@@ -1,6 +1,6 @@
 {
   "name": "shine-salary-mcp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Local, read-only MCP server for Shine Salary (api.salary.dk)",
   "type": "module",
@@ -9,7 +9,13 @@
     "shine-salary-mcp": "dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/dev",
+    "!dist/**/*.map",
+    "README.md",
+    "SECURITY.md",
+    "docs/AUTH.md",
+    "docs/CLIENTS.md"
   ],
   "engines": {
     "node": ">=24"
@@ -19,7 +25,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && vitest run",
     "check": "npm run typecheck && npm test",
-    "smoke:live": "node --env-file=.env dist/dev/live-smoke.js"
+    "smoke:live": "node --env-file=.env dist/dev/live-smoke.js",
+    "prepack": "npm run build",
+    "rehearse": "bash scripts/rehearse-install.sh"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.4.0",
@@ -31,5 +39,17 @@
     "@types/node": "24.19.2",
     "typescript": "7.0.2",
     "vitest": "5.0.5"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "salary",
+    "shine",
+    "payroll",
+    "denmark"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Fjeldmann/shine-salary-mcp.git"
   }
 }

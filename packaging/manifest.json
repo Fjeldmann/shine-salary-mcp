@@ -1,0 +1,32 @@
+{
+  "manifest_version": "0.3",
+  "name": "shine-salary-mcp",
+  "display_name": "Shine Salary (read-only)",
+  "version": "0.1.0",
+  "description": "Read-only access to Shine Salary payroll data: companies, employees, payroll runs, payslips and time registrations.",
+  "long_description": "Six read-only tools over the Salary.dk API. Personal identifiers (CPR, addresses, contact details, bank and pension accounts) are never returned. Run `shine-salary-mcp login` once in a terminal before using it; credentials live in the OS keychain.",
+  "author": { "name": "Fjeldmann ApS", "url": "https://www.fjeldmann.dk" },
+  "repository": { "type": "git", "url": "https://github.com/Fjeldmann/shine-salary-mcp.git" },
+  "license": "UNLICENSED",
+  "keywords": ["payroll", "salary", "denmark", "read-only"],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/cli.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/cli.js", "serve"]
+    }
+  },
+  "tools": [
+    { "name": "salary_company_overview", "description": "Companies available, and for one company: status, active payroll periods and warnings." },
+    { "name": "salary_find_employees", "description": "List or search employees by name or employee number." },
+    { "name": "salary_employee_summary", "description": "One employee: employment, contract, salary rows, pension scheme and benefits." },
+    { "name": "salary_payroll_overview", "description": "Payroll runs in a date range with totals; one run with deviations and transfers." },
+    { "name": "salary_payslip_summary", "description": "Payslips with net pay and labelled key figures (A-skat, AM-bidrag, ATP, pension…)." },
+    { "name": "salary_time_summary", "description": "Time and leave registrations totalled per employee (not a leave balance)." }
+  ],
+  "compatibility": {
+    "platforms": ["darwin"],
+    "runtimes": { "node": ">=24" }
+  }
+}
