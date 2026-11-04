@@ -11,7 +11,20 @@ export const MASK = '[masked]';
 
 /** Identifiers that are masked wherever they appear. Keys are compared case-insensitively. */
 const MASKED_KEYS = new Set(
-  ['nationalID', 'cpr', 'tin', 'bankAccountNumber', 'bankRegistrationNumber', 'iban', 'swift', 'bic'].map((k) =>
+  [
+    'nationalID',
+    'cpr',
+    'cvr',
+    'tin',
+    'bankAccountNumber',
+    'bankRegistrationNumber',
+    'iban',
+    'swift',
+    'bic',
+    'sortCode',
+    'pensionCustomerID',
+    'customerNumber',
+  ].map((k) =>
     k.toLowerCase(),
   ),
 );
@@ -48,9 +61,19 @@ const BANK_RE = /(?<![\d-])\d{4}[- ]\d{6,10}(?![\d-])/g;
 /** IBAN (any country). */
 const IBAN_RE = /\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,4})?\b/g;
 
-/** Mask CPR, bank and IBAN patterns embedded in free text (notes, error messages). */
+/** E-mail addresses. */
+const EMAIL_RE = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/gu;
+/** Danish phone numbers (8 digits, optional +45 and pair spacing). Only applied to free text from users. */
+const PHONE_RE = /(?<![\d-])(?:\+45 ?)?\d{2} ?\d{2} ?\d{2} ?\d{2}(?![\d-])/g;
+
+/** Mask CPR, bank, IBAN and e-mail patterns embedded in text (names, titles, error messages). */
 export function scrubText(text: string): string {
-  return text.replace(IBAN_RE, MASK).replace(CPR_RE, MASK).replace(BANK_RE, MASK);
+  return text.replace(IBAN_RE, MASK).replace(EMAIL_RE, MASK).replace(CPR_RE, MASK).replace(BANK_RE, MASK);
+}
+
+/** Stricter scrub for free text written by people (notes, warning parameters): also masks phone numbers. */
+export function scrubFreeText(text: string): string {
+  return scrubText(text).replace(PHONE_RE, MASK);
 }
 
 /**

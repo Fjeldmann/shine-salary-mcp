@@ -2,7 +2,22 @@
 
 This is a local [Model Context Protocol](https://modelcontextprotocol.io) server. It gives an AI assistant **read-only** access to a [Shine Salary](https://app.salary.dk) account. Shine Salary was formerly Salary.dk.
 
-Status: **milestone 3 of 6** (durable authentication). `login` stores credentials in a secure local store, and they survive restarts. `serve` runs a working MCP server over stdio, but it exposes no tools yet (milestone 4). See [`docs/AUTH.md`](docs/AUTH.md).
+Status: **milestone 4 of 6** (tools). After a one-time `login` (see [`docs/AUTH.md`](docs/AUTH.md)), `serve` exposes six read-only tools over stdio.
+
+## Tools
+
+| Tool | What it answers |
+|---|---|
+| `salary_company_overview` | Which companies are available; for one company: status, active payroll periods, and warnings by severity. |
+| `salary_find_employees` | List or search employees by name or employee number. |
+| `salary_employee_summary` | One employee: employment, current contract, salary rows, pension scheme and percentage, benefits. Ambiguous names return candidates. |
+| `salary_payroll_overview` | Payroll runs (lønkørsler) in a date range with totals; for one run: deviations and transfers. |
+| `salary_payslip_summary` | Payslips by employee, payroll or ID: net pay and labelled key figures (A-skat, AM-bidrag, ATP, pension, feriegrundlag…); detailed mode adds every line. |
+| `salary_time_summary` | Time and leave registrations in a range, totalled per employee and kind. Not a leave balance. |
+
+All amounts are DKK as Salary reports them, and sums are computed in øre. Every result includes the company, retrieval time, the status of each section (`ok`, `empty`, `permission_denied`…), the source endpoints, and pagination.
+
+**Never returned:** CPR/CVR numbers, addresses, e-mail, phone numbers, birth dates, bank accounts, pension account/sort code/customer numbers, transfer recipients, the payslip's personal `fields`, and Salary accounts whose names contain internal IDs (tax cards, custom salary types). Free text such as notes and warning parameters is truncated, scrubbed of CPR, account, e-mail and phone patterns, and marked as data rather than instructions.
 
 ## What exists
 
@@ -14,6 +29,7 @@ Status: **milestone 3 of 6** (durable authentication). `login` stores credential
 | `src/privacy/redact.ts`, `src/log.ts` | Masks CPR, bank and IBAN identifiers, drops personal fields, and redacts secrets from logs (stderr only). |
 | `src/auth/store.ts`, `src/auth/backends/`, `src/auth/secure-fs.ts` | Profile state and secrets: OS keychain, or on WSL AES-256-GCM files with a Windows-DPAPI-wrapped key. |
 | `src/auth/token-manager.ts`, `src/auth/lock.ts` | Token renewal shared between processes under a lock file; logout reaches running servers. |
+| `src/tools/`, `src/domain/` | The six tools, company scoping and ownership checks, employee resolution, cursors, money arithmetic. |
 | `src/server.ts`, `src/cli.ts` | `serve` (stdio, 2026-07-28 protocol plus 2025-era initialize), `login`, `logout`, `status [--check]`. |
 
 ## Development

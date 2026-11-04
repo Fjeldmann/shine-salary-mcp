@@ -59,3 +59,11 @@ describe('redactSecrets', () => {
     for (const s of ['abc123', 'xyz', 'qwe', 'z'.repeat(64), secret]) expect(out).not.toContain(s);
   });
 });
+
+describe('scrubFreeText', () => {
+  it('also masks e-mail and Danish phone numbers', async () => {
+    const { scrubFreeText } = await import('../src/privacy/redact.js');
+    expect(scrubFreeText('ring +45 12 34 56 78 eller a.b@firma.dk')).toBe('ring [masked] eller [masked]');
+    expect(scrubFreeText('2026-10-01 7.4 timer')).toBe('2026-10-01 7.4 timer');
+  });
+});

@@ -29,6 +29,15 @@ async function runServe(lines: object[], env: Record<string, string> = {}): Prom
   return { stdout, stderr };
 }
 
+const SIX = [
+  'salary_company_overview',
+  'salary_find_employees',
+  'salary_employee_summary',
+  'salary_payroll_overview',
+  'salary_payslip_summary',
+  'salary_time_summary',
+];
+
 const META = {
   'io.modelcontextprotocol/protocolVersion': '2026-07-28',
   'io.modelcontextprotocol/clientInfo': { name: 'test', version: '1' },
@@ -51,7 +60,7 @@ describe('serve over stdio (built dist/cli.js)', () => {
     const messages = stdout.split('\n').filter(Boolean).map((l) => JSON.parse(l) as { id: number; result?: Record<string, unknown> });
     expect(messages.map((m) => m.id)).toEqual([1, 2]);
     expect(messages[0]!.result!.supportedVersions).toContain('2026-07-28');
-    expect(messages[1]!.result!.tools).toEqual([]);
+    expect((messages[1]!.result!.tools as Array<{ name: string }>).map((t) => t.name)).toEqual(SIX);
     expect(stderr).toContain('serve: starting');
     expect(stderr).toContain('not logged in');
   });
@@ -64,6 +73,15 @@ describe('serve over stdio (built dist/cli.js)', () => {
     ]);
     const messages = stdout.split('\n').filter(Boolean).map((l) => JSON.parse(l) as { id: number; result?: Record<string, unknown> });
     expect(messages[0]!.result!.serverInfo).toMatchObject({ name: 'shine-salary-mcp' });
-    expect(messages[1]!.result!.tools).toEqual([]);
+    expect((messages[1]!.result!.tools as Array<{ name: string }>).map((t) => t.name)).toEqual(SIX);
+  });
+
+  it('answers a tool call with AUTH_REQUIRED when not logged in, without touching stdout otherwise', async () => {
+    const { stdout } = await runServe([
+      { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { _meta: META, name: 'salary_company_overview', arguments: {} } },
+    ]);
+    const [msg] = stdout.split('\n').filter(Boolean).map((l) => JSON.parse(l) as { result: { isError: boolean; content: Array<{ text: string }> } });
+    expect(msg!.result.isError).toBe(true);
+    expect(JSON.parse(msg!.result.content[0]!.text).error.code).toBe('AUTH_REQUIRED');
   });
 });
