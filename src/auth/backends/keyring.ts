@@ -1,5 +1,5 @@
 import { SalaryError } from '../../errors.js';
-import type { SecretBackend, SecretName } from './types.js';
+import { SECRET_NAMES, type SecretBackend, type SecretName } from './types.js';
 
 export const KEYRING_SERVICE = 'shine-salary-mcp';
 
@@ -69,8 +69,7 @@ export class KeyringBackend implements SecretBackend {
   }
 
   async destroy(): Promise<void> {
-    await this.delete('token');
-    await this.delete('credentials');
+    for (const name of SECRET_NAMES) await this.delete(name);
   }
 
   /** Feature test: a real write, read-back and delete, not just "the module loaded". */

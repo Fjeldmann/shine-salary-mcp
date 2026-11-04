@@ -16,14 +16,20 @@ export const ProfileState = z.object({
   profile: z.string(),
   backend: z.enum(BACKEND_KINDS as [BackendKind, ...BackendKind[]]),
   generation: z.uuid(),
-  companyID: z.guid(),
-  companyName: z.string().max(500),
+  /** Added in M5; files written before default to API-client mode. */
+  mode: z.enum(['api', 'browser']).default('api'),
+  /** Null when the credentials see several companies (browser sessions). */
+  companyID: z.guid().nullable(),
+  companyName: z.string().max(500).nullable(),
+  companies: z.array(z.object({ id: z.guid(), name: z.string().max(500) })).max(200).optional(),
   scopes: z.array(z.string().max(100)).max(50),
   createdAt: z.string(),
+  /** Browser mode: age of the session token when Salary first rejected it (the token-lifetime probe). */
+  tokenRejectedAfterMs: z.number().optional(),
 });
 export type ProfileState = z.infer<typeof ProfileState>;
 
-export const CredentialsRecord = z.object({
+export const ApiCredentialsRecord = z.object({
   v: z.literal(1),
   mode: z.literal('api'),
   generation: z.uuid(),
@@ -31,6 +37,9 @@ export const CredentialsRecord = z.object({
   apiClientSecret: z.string().min(1).max(4096),
   apiKey: z.string().min(1).max(4096),
 });
+/** Browser mode holds no long-lived secret: the session token (in `token`) is the credential. */
+export const BrowserCredentialsRecord = z.object({ v: z.literal(1), mode: z.literal('browser'), generation: z.uuid() });
+export const CredentialsRecord = z.discriminatedUnion('mode', [ApiCredentialsRecord, BrowserCredentialsRecord]);
 export type CredentialsRecord = z.infer<typeof CredentialsRecord>;
 
 export const TokenRecord = z.object({
@@ -85,11 +94,14 @@ export class ProfileStore {
     }
   }
 
-  async writeState(state: Omit<ProfileState, 'version' | 'profile' | 'generation' | 'createdAt'> & { generation?: string }): Promise<ProfileState> {
+  async writeState(
+    state: Omit<ProfileState, 'version' | 'profile' | 'generation' | 'createdAt' | 'mode'> & { generation?: string; mode?: ProfileState['mode']; createdAt?: string },
+  ): Promise<ProfileState> {
     const full = ProfileState.parse({
       version: 1,
       profile: this.profile,
       createdAt: new Date().toISOString(),
+      mode: 'api',
       ...state,
       generation: state.generation ?? randomUUID(),
     });

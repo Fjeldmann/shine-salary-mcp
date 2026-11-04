@@ -48,6 +48,25 @@ Renewal runs under a per-profile lock file (`profiles/<profile>.lock`). After ta
 
 Local logout does not revoke anything at Salary. To cut off access, delete the company API key in Salary. A token that was already copied stays valid until it expires (about an hour).
 
+## Browser login (interactive alternative)
+
+```bash
+npx playwright-core install chromium        # once; playwright-core is an optional dependency
+shine-salary-mcp login --method browser     # add --profile web to keep an API-key login alongside
+```
+
+A Chromium window opens at app.salary.dk. You sign in there yourself, including Turnstile and MFA. The window closes on its own when the `sally_access_token` session cookie appears, or after 10 minutes. While the window is open, only `POST /v2/login` reaches the API. Every other API call gets an immediate 401 from the server itself, so no payroll data loads into the browser. The login page and Cloudflare Turnstile are not intercepted.
+
+**Trust caveat.** The stored session has every permission your Salary user has, including writes. shine-salary-mcp still only sends allowlisted GET requests, but in this mode read-only is guaranteed by the client, not by the credential. `login` therefore asks you to type `yes`, or to pass `--accept-user-session`. `status` repeats the caveat. The API-key method stays the recommended one.
+
+Before the token is stored, it is checked with `GET /v2/companies`.
+
+The browser itself keeps nothing: there is no profile directory, cache, trace or screenshot. To carry "trust this device" over to the next browser login, Salary's other cookies and localStorage are saved as a third encrypted secret, `browser-state` (max 16 KB). The session cookie itself is never part of it. The next browser login restores them into a fresh browser context.
+
+**Renewal needs you.** There is no way to renew a web session without signing in again. The token is used until Salary rejects it, with no clock-based expiry, because its real lifetime is unknown. When Salary rejects it, the tools answer `AUTH_REQUIRED`, and `state.json` records how long the session lasted (`tokenRejectedAfterMs`). `status` shows that value. This is the token-lifetime probe from the plan, measured through normal use.
+
+`serve` never opens a browser: the browser code can only be reached from the `login` command, and a test enforces this.
+
 ## Not supported (v1)
 
 - Email/password login.

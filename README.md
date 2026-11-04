@@ -2,7 +2,7 @@
 
 This is a local [Model Context Protocol](https://modelcontextprotocol.io) server. It gives an AI assistant **read-only** access to a [Shine Salary](https://app.salary.dk) account. Shine Salary was formerly Salary.dk.
 
-Status: **milestone 4 of 6** (tools). After a one-time `login` (see [`docs/AUTH.md`](docs/AUTH.md)), `serve` exposes six read-only tools over stdio.
+Status: **milestone 5 of 6** (tools plus interactive browser login). After a one-time `login` (see [`docs/AUTH.md`](docs/AUTH.md)), `serve` exposes six read-only tools over stdio.
 
 ## Tools
 
@@ -63,6 +63,7 @@ Both commands send only GET requests after logging in. They print company names,
 | `typescript` | 7.0.2 |
 | `vitest` | 5.0.5 |
 | `@napi-rs/keyring` | 2.1.2 |
+| `playwright-core` (optional, browser login only) | 1.64.0 |
 | `@types/node` | 24.19.2 |
 
 ## Docs

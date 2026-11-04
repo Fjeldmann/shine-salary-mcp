@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { SalaryError } from '../../errors.js';
 import { readPrivateFile, removeFile, writePrivateFileAtomic } from '../secure-fs.js';
-import type { BackendKind, SecretBackend, SecretName } from './types.js';
+import { SECRET_NAMES, type BackendKind, type SecretBackend, type SecretName } from './types.js';
 
 export interface KeyProvider {
   getKey(): Promise<{ kid: string; key: Buffer }>;
@@ -92,8 +92,7 @@ export class EncryptedFileBackend implements SecretBackend {
   }
 
   async destroy(): Promise<void> {
-    await this.delete('token');
-    await this.delete('credentials');
+    for (const name of SECRET_NAMES) await this.delete(name);
     await this.#keys.destroy();
   }
 }

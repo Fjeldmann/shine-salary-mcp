@@ -44,8 +44,10 @@ export class StoredTokenProvider implements TokenProvider {
     this.#marginMs = opts.safetyMarginMs ?? 2 * 60 * 1000;
   }
 
-  #usable(t: TokenRecord | undefined, generation: string): t is TokenRecord {
-    return !!t && t.generation === generation && t.expiresAt - this.#marginMs > this.#now() && !this.#rejected.has(t.accessToken);
+  /** Browser tokens have no known lifetime: they are used until Salary rejects one. */
+  #usable(t: TokenRecord | undefined, generation: string, mode: 'api' | 'browser'): boolean {
+    if (!t || t.generation !== generation || this.#rejected.has(t.accessToken)) return false;
+    return mode === 'browser' || t.expiresAt - this.#marginMs > this.#now();
   }
 
   async getToken(): Promise<string> {
@@ -54,7 +56,7 @@ export class StoredTokenProvider implements TokenProvider {
       this.#current = undefined;
       throw notLoggedIn();
     }
-    if (this.#usable(this.#current, state.generation)) return this.#current.accessToken;
+    if (this.#current && this.#usable(this.#current, state.generation, state.mode)) return this.#current.accessToken;
     this.#current = undefined;
 
     this.#pending ??= this.#renew(state.generation).finally(() => {
@@ -76,7 +78,7 @@ export class StoredTokenProvider implements TokenProvider {
       const backend = await this.#store.backend(state.backend);
 
       const stored = parseRecord(TokenRecord, await backend.get('token'), 'access token');
-      if (this.#usable(stored, generation)) {
+      if (stored && this.#usable(stored, generation, state.mode)) {
         registerSecret(stored.accessToken);
         this.#current = stored;
         return stored;
@@ -84,6 +86,15 @@ export class StoredTokenProvider implements TokenProvider {
 
       const creds = parseRecord(CredentialsRecord, await backend.get('credentials'), 'credentials');
       if (!creds || creds.generation !== generation) throw notLoggedIn();
+      if (creds.mode === 'browser') {
+        // No way to renew without a person. Record how long the session lasted, once.
+        if (stored && this.#rejected.has(stored.accessToken) && state.tokenRejectedAfterMs === undefined) {
+          await this.#store.writeState({ ...state, tokenRejectedAfterMs: this.#now() - stored.obtainedAt });
+        }
+        throw new SalaryError('AUTH_REQUIRED', 'The Salary browser session has expired.', {
+          hint: 'Run `shine-salary-mcp login --method browser` in a terminal.',
+        });
+      }
       registerSecret(creds.apiClientSecret);
       registerSecret(creds.apiKey);
 
