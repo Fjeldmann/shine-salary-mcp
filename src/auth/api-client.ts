@@ -153,11 +153,17 @@ export class ApiCredentialTokenProvider implements TokenProvider {
     if (current && current.expiresAt - this.#marginMs > this.#now()) return current.accessToken;
     // The exchange is shared by concurrent callers, so it is not tied to one
     // caller's signal; a cancelled caller just stops waiting for it.
-    this.#pending ??= exchangeApiCredentials(this.#creds, this.#opts).finally(() => {
-      this.#pending = undefined;
-    });
+    this.#pending ??= exchangeApiCredentials(this.#creds, this.#opts)
+      .then((t) => {
+        // Stored here, not by the awaiting caller, so the token survives even
+        // if every caller is cancelled while the exchange runs.
+        this.#current = t;
+        return t;
+      })
+      .finally(() => {
+        this.#pending = undefined;
+      });
     const fresh = signal ? await abortable(this.#pending, signal) : await this.#pending;
-    this.#current = fresh;
     return fresh.accessToken;
   }
 

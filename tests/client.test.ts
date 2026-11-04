@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { RequestBudget, SalaryClient } from '../src/api/client.js';
+import type { FetchLike } from '../src/api/http.js';
 import { COMPANY, fakeFetch, fakeTokens, json, noSleep } from './helpers.js';
 
 const ok = json(200, { data: [] });
@@ -79,14 +80,12 @@ describe('SalaryClient transport', () => {
   });
 
   it('times out a hung request', async () => {
-    const f = fakeFetch(
-      (_call) =>
-        new Promise<Response>((_resolve, reject) => {
-          // Behave like fetch: reject when the signal fires.
-          setTimeout(() => reject(Object.assign(new Error('timed out'), { name: 'TimeoutError' })), 50);
-        }),
-    );
-    const { c } = client(f.fetch, { timeoutMs: 10, maxRetries: 0 });
+    // Hangs forever unless the client's signal fires, like a real fetch.
+    const hanging: FetchLike = (_input, init) =>
+      new Promise<Response>((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(init.signal?.reason), { once: true });
+      });
+    const { c } = client(hanging, { timeoutMs: 20, maxRetries: 0 });
     expect((await errorOf(c.get('companies.list'))).code).toBe('TIMEOUT');
   });
 
@@ -179,6 +178,12 @@ describe('SalaryClient retries', () => {
       throw new TypeError('fetch failed');
     }, ok);
     await client(f.fetch).c.get('companies.list');
+    expect(f.calls).toHaveLength(2);
+  });
+
+  it('does not charge the 401 replay to the budget', async () => {
+    const f = fakeFetch(json(401, {}), ok);
+    await client(f.fetch).c.get('companies.list', {}, { budget: new RequestBudget(1) });
     expect(f.calls).toHaveLength(2);
   });
 

@@ -4,7 +4,7 @@ import { ApiCredentialTokenProvider } from './auth/api-client.js';
 import { devEnvCredentialsEnabled, readDevEnvCredentials } from './auth/env-credentials.js';
 import { checkAccess } from './commands/check-access.js';
 import { isSalaryError, SalaryError } from './errors.js';
-import { log } from './log.js';
+import { redact } from './log.js';
 import { serve } from './server.js';
 import { NAME, VERSION } from './version.js';
 
@@ -17,7 +17,8 @@ function fail(err: unknown): never {
   if (isSalaryError(err)) {
     process.stderr.write(`Error [${err.code}]: ${err.message}\n${err.hint ? `Next step: ${err.hint}\n` : ''}`);
   } else {
-    log('error', 'unexpected failure', { name: (err as Error)?.name ?? 'unknown' });
+    const e = err as Error | undefined;
+    process.stderr.write(`Unexpected error: ${e?.name ?? 'Error'}: ${redact(String(e?.message ?? err))}\n`);
   }
   process.exit(1);
 }

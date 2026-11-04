@@ -44,7 +44,11 @@ export interface ApiResponse {
   body: unknown;
 }
 
-/** Caps the number of HTTP attempts one tool call may make (pagination, joins, retries). */
+/**
+ * Caps the number of HTTP attempts one tool call may make (pagination, joins,
+ * retries). The single 401 renew-and-replay is exempt, so an expired token
+ * never turns into BUDGET_EXCEEDED.
+ */
 export class RequestBudget {
   #remaining: number;
   constructor(readonly max: number) {
@@ -177,8 +181,10 @@ export class SalaryClient {
 
     let replayedAuth = false;
     let retries = 0;
+    let skipBudget = false;
     for (;;) {
-      budget?.take(endpoint.id);
+      if (!skipBudget) budget?.take(endpoint.id);
+      skipBudget = false;
       const token = await this.#tokens.getToken(signal);
       let res: Response;
       let text: string;
@@ -218,6 +224,7 @@ export class SalaryClient {
 
       if (res.status === 401 && !replayedAuth) {
         replayedAuth = true;
+        skipBudget = true;
         this.#tokens.invalidate(token);
         continue;
       }

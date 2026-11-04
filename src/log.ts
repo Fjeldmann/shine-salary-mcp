@@ -11,6 +11,11 @@ export function registerSecret(value: string | undefined): void {
   if (value && value.length >= 8) secrets.add(value);
 }
 
+/** Redact a free-form message (e.g. an unexpected error) with the registered secrets. */
+export function redact(text: string): string {
+  return redactSecrets(text, secrets);
+}
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 const ORDER: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
 

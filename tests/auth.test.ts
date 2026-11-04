@@ -90,6 +90,24 @@ describe('ApiCredentialTokenProvider', () => {
   });
 });
 
+it('keeps the token when the only waiting caller is cancelled', async () => {
+  let release!: () => void;
+  const gate = new Promise<void>((r) => (release = r));
+  const f = fakeFetch(async () => {
+    await gate;
+    return new Response(JSON.stringify({ data: { accessToken: TOKEN } }), { status: 200 });
+  });
+  const p = new ApiCredentialTokenProvider(creds, { fetch: f.fetch });
+  const ctl = new AbortController();
+  const waiting = p.getToken(ctl.signal);
+  ctl.abort();
+  expect((await errorOf(waiting)).code).toBe('CANCELLED');
+  release();
+  await new Promise((r) => setTimeout(r, 10));
+  expect(await p.getToken()).toBe(TOKEN);
+  expect(f.calls).toHaveLength(1);
+});
+
 describe('dev env credentials', () => {
   const env = { 'API-CLIENT-ID': creds.apiClientID, 'API-CLIENT-SECRET': creds.apiClientSecret, 'API-KEY': creds.apiKey };
 
