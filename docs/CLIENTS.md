@@ -53,4 +53,6 @@ Any stdio MCP client works with the command `node /absolute/path/to/dist/cli.js 
 | In-memory MCP round trip calling all six tools against a fake Salary, with outputs checked against the declared schemas (`tests/tools.test.ts`) | Passes in CI |
 | Live run of all six tools against a real company (2026-11-04) | Passes, no personal data in any output |
 | Installation from the packed tarball: login, status, serve, logout (`npm run rehearse`) | Passes (2026-11-04, live API, isolated config dir) |
-| MCP Inspector, Claude Desktop, Claude Code | Not yet run; needs the user's go-ahead (Inspector runs via `npx`) |
+| MCP Inspector 2.11.0 CLI (`--cli --strict`): `tools/list` plus a call to every tool against the live API | Passes: six tools, read-only annotations, output schemas, 0 schema-portability warnings, no personal data in the output |
+| `mcpb validate` / `pack` 2.1.2, then the unpacked bundle's server over stdio | Passes (test bundle built on Linux) |
+| Claude Desktop, Claude Code | Not yet run: this sends masked payroll data to the model, so it's the user's call |

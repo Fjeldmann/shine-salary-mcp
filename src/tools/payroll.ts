@@ -4,7 +4,7 @@ import { assertSameCompany, requireCompany, type AuthorizedCompany } from '../do
 import type { ToolContext } from '../domain/context.js';
 import { decodeCursor, pageInfo } from '../domain/cursor.js';
 import { CURRENCY, sumAmounts } from '../domain/money.js';
-import { checkRange, companyId, currentYearRange, cursor, envelope, isoDate, limit, responseFormat, type ToolDefinition } from './common.js';
+import { checkRange, companyId, currentYearRange, cursor, envelope, isoDate, limit, open, responseFormat, type ToolDefinition } from './common.js';
 
 type PayRollT = z.infer<typeof PayRoll>;
 
@@ -55,10 +55,10 @@ export const payrollOverview: ToolDefinition<typeof input> = {
     '(afvigelser: timer, skattekort, bruttoløn, udbetaling) and transfers (overførsler) by type and state. Detailed mode lists every deviation and transfer.',
   inputSchema: input,
   outputSchema: envelope({
-    payrolls: z.array(z.looseObject({ id: z.string() })).optional(),
-    payroll: z.looseObject({ id: z.string() }).optional(),
-    deviations: z.looseObject({}).nullable().optional(),
-    transfers: z.looseObject({}).nullable().optional(),
+    payrolls: z.array(open({ id: z.string() })).optional(),
+    payroll: open({ id: z.string() }).optional(),
+    deviations: open({}).nullable().optional(),
+    transfers: open({}).nullable().optional(),
   }),
   async run(args, ctx) {
     const company = await requireCompany(ctx, args.company_id);

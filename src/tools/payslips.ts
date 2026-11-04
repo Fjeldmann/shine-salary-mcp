@@ -6,7 +6,7 @@ import { decodeCursor, pageInfo } from '../domain/cursor.js';
 import { allEmployees, getEmployee } from '../domain/employees.js';
 import { CURRENCY } from '../domain/money.js';
 import { SalaryError } from '../errors.js';
-import { companyId, cursor, envelope, limit, responseFormat, UUID_IN_TEXT, type ToolDefinition } from './common.js';
+import { UUID_IN_TEXT, companyId, cursor, envelope, limit, open, responseFormat, type ToolDefinition } from './common.js';
 import { getPayroll } from './payroll.js';
 
 type PaySlipT = z.infer<typeof PaySlip>;
@@ -126,7 +126,7 @@ export const payslipSummary: ToolDefinition<typeof input> = {
     'from Salary: løn, A-indkomst, A-skat, AM-indkomst, AM-bidrag, ATP, pension, feriegrundlag, timer — all in DKK, using Salary\'s own account names. ' +
     'Detailed mode adds every calculation line (linjer). CPR numbers and contact details on the payslip are never returned.',
   inputSchema: input,
-  outputSchema: envelope({ payslips: z.array(z.looseObject({ id: z.string() })) }),
+  outputSchema: envelope({ payslips: z.array(open({ id: z.string() })) }),
   maxRequests: 40,
   async run(args, ctx) {
     const company = await requireCompany(ctx, args.company_id);

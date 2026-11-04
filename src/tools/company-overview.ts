@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ActivePayroll, CompanyDetail, Warning } from '../api/schemas.js';
 import { authorizedCompanies, requireCompany } from '../domain/company.js';
-import { envelope, responseFormat, untrustedText, type ToolDefinition } from './common.js';
+import { envelope, open, responseFormat, type ToolDefinition, untrustedText } from './common.js';
 
 const input = z.object({
   company_id: z.guid().optional().describe('Omit to list the companies these credentials can access.'),
@@ -17,10 +17,10 @@ export const companyOverview: ToolDefinition<typeof input> = {
     'and warnings from Salary grouped by severity. Use the returned company ID in every other salary_* tool.',
   inputSchema: input,
   outputSchema: envelope({
-    companies: z.array(z.looseObject({ id: z.string(), name: z.string() })).optional(),
-    company_details: z.looseObject({}).optional(),
-    active_payrolls: z.array(z.looseObject({})).optional(),
-    warnings: z.looseObject({}).optional(),
+    companies: z.array(open({ id: z.string(), name: z.string() })).optional(),
+    company_details: open({}).optional(),
+    active_payrolls: z.array(open({})).optional(),
+    warnings: open({}).optional(),
   }),
   maxRequests: 10,
   async run(args, ctx) {

@@ -17,13 +17,25 @@ export const limit = (def = 25, max = 100) => z.number().int().min(1).max(max).d
 export const cursor = z.string().max(200).optional().describe('Opaque cursor from a previous result\'s pagination.next_cursor.');
 export const isoDate = z.iso.date().describe('Date, YYYY-MM-DD.');
 
-const pagination = z.looseObject({ returned: z.number(), total: z.number().optional(), next_cursor: z.string().optional(), truncated: z.boolean() });
+/**
+ * Output objects are open: Salary adds fields over time, and results carry
+ * optional sections. Declared explicitly as `additionalProperties: true`
+ * (zod's default `{}` constrains nothing and trips schema-portability checks).
+ */
+export function open<S extends z.ZodRawShape>(shape: S) {
+  return z.looseObject(shape).meta({ additionalProperties: true });
+}
+
+/** Nullable string as `anyOf` with single types (more portable than `type: [..., "null"]`). */
+export const nullableString = () => z.union([z.string(), z.literal(null)]);
+
+const pagination = open({ returned: z.number(), total: z.number().optional(), next_cursor: z.string().optional(), truncated: z.boolean() });
 
 /** Fields every tool result carries. */
 export function envelope<S extends z.ZodRawShape>(shape: S) {
-  return z.looseObject({
+  return open({
     retrieved_at: z.string(),
-    company: z.looseObject({ id: z.string(), name: z.string() }).nullable(),
+    company: open({ id: z.string(), name: z.string() }).nullable(),
     sections: z.record(z.string(), z.string()),
     sources: z.array(z.string()),
     pagination: pagination.optional(),

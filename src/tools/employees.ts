@@ -3,7 +3,7 @@ import { Contract, Employee, Employment } from '../api/schemas.js';
 import { requireCompany } from '../domain/company.js';
 import { decodeCursor, pageInfo } from '../domain/cursor.js';
 import { allEmployees, departmentNames, matchesQuery, projectContract, projectEmployeeBrief, resolveEmployee } from '../domain/employees.js';
-import { companyId, cursor, envelope, limit, responseFormat, type ToolDefinition } from './common.js';
+import { companyId, cursor, envelope, limit, nullableString, open, responseFormat, type ToolDefinition } from './common.js';
 
 const findInput = z.object({
   company_id: companyId,
@@ -12,7 +12,7 @@ const findInput = z.object({
   cursor,
 });
 
-const brief = z.looseObject({ id: z.string(), name: z.string().nullable() });
+const brief = open({ id: z.string(), name: nullableString() });
 
 export const findEmployees: ToolDefinition<typeof findInput> = {
   name: 'salary_find_employees',
@@ -62,10 +62,10 @@ export const employeeSummary: ToolDefinition<typeof summaryInput> = {
     'If a name matches several people, returns candidates instead of guessing. CPR, address, contact and bank/pension account numbers are never returned.',
   inputSchema: summaryInput,
   outputSchema: envelope({
-    employee: z.looseObject({}).optional(),
+    employee: open({}).optional(),
     candidates: z.array(brief).optional(),
-    employments: z.array(z.looseObject({})).optional(),
-    contracts: z.array(z.looseObject({})).optional(),
+    employments: z.array(open({})).optional(),
+    contracts: z.array(open({})).optional(),
   }),
   async run(args, ctx) {
     const company = await requireCompany(ctx, args.company_id);

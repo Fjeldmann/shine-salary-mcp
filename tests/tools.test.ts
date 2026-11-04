@@ -195,7 +195,17 @@ describe('MCP round trip (in-memory transport)', () => {
     const { request } = await connect();
     const list = await request('tools/list');
     expect(list.result.tools.map((t: any) => t.name)).toHaveLength(6);
+    // Schema portability (MCP Inspector --strict): no constraint-free `{}` schemas, no `type` arrays.
+    const walk = (node: unknown, path: string): void => {
+      if (!node || typeof node !== 'object') return;
+      const o = node as Record<string, unknown>;
+      expect(Array.isArray(o.type), `${path}: type array`).toBe(false);
+      if ('additionalProperties' in o) expect(o.additionalProperties, `${path}.additionalProperties`).not.toEqual({});
+      for (const [k, v] of Object.entries(o)) walk(v, `${path}.${k}`);
+    };
     for (const t of list.result.tools) {
+      walk(t.inputSchema, `${t.name}.inputSchema`);
+      walk(t.outputSchema, `${t.name}.outputSchema`);
       expect(t.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true });
       expect(t.outputSchema).toBeTruthy();
     }

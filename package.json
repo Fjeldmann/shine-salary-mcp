@@ -27,7 +27,8 @@
     "check": "npm run typecheck && npm test",
     "smoke:live": "node --env-file=.env dist/dev/live-smoke.js",
     "prepack": "npm run build",
-    "rehearse": "bash scripts/rehearse-install.sh"
+    "rehearse": "bash scripts/rehearse-install.sh",
+    "bundle": "bash scripts/build-mcpb.sh"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.4.0",

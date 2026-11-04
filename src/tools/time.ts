@@ -4,7 +4,7 @@ import { requireCompany } from '../domain/company.js';
 import { decodeCursor, pageInfo } from '../domain/cursor.js';
 import { allEmployees, getEmployee } from '../domain/employees.js';
 import { sumHours } from '../domain/money.js';
-import { checkRange, companyId, cursor, envelope, isoDate, limit, responseFormat, untrustedText, type ToolDefinition } from './common.js';
+import { checkRange, companyId, cursor, envelope, isoDate, limit, open, responseFormat, type ToolDefinition, untrustedText } from './common.js';
 
 const input = z.object({
   company_id: companyId,
@@ -25,7 +25,7 @@ export const timeSummary: ToolDefinition<typeof input> = {
     '(timer, dage, minutter), with leave-type names. Detailed mode lists the rows. ' +
     'This shows what was registered; it is NOT a remaining leave balance (feriesaldo).',
   inputSchema: input,
-  outputSchema: envelope({ totals: z.array(z.looseObject({})), registrations: z.array(z.looseObject({})).optional() }),
+  outputSchema: envelope({ totals: z.array(open({})), registrations: z.array(open({})).optional() }),
   maxRequests: 30,
   async run(args, ctx) {
     const company = await requireCompany(ctx, args.company_id);
