@@ -16,7 +16,7 @@ export const ProfileState = z.object({
   profile: z.string(),
   backend: z.enum(BACKEND_KINDS as [BackendKind, ...BackendKind[]]),
   generation: z.uuid(),
-  companyID: z.uuid(),
+  companyID: z.guid(),
   companyName: z.string().max(500),
   scopes: z.array(z.string().max(100)).max(50),
   createdAt: z.string(),
@@ -27,7 +27,7 @@ export const CredentialsRecord = z.object({
   v: z.literal(1),
   mode: z.literal('api'),
   generation: z.uuid(),
-  apiClientID: z.uuid(),
+  apiClientID: z.guid(),
   apiClientSecret: z.string().min(1).max(4096),
   apiKey: z.string().min(1).max(4096),
 });

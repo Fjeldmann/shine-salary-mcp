@@ -50,8 +50,12 @@ export const timeSummary: ToolDefinition<typeof input> = {
       { query: { ...scope, from: args.from, to: args.to, ...(args.state ? { stateFilter: args.state } : {}) } },
       { pageSize: 500, maxItems: 10_000 },
     );
-    // Rows must belong to known employees of this company (defence in depth when listing by company).
-    const rows = args.employee_id ? items.filter((t) => t.employeeID === args.employee_id) : items;
+    // Rows must belong to this employee, or (by company) to an employee of this company when the list was read.
+    const rows = args.employee_id
+      ? items.filter((t) => t.employeeID === args.employee_id)
+      : names.size > 0
+        ? items.filter((t) => !!t.employeeID && names.has(t.employeeID))
+        : items;
     ctx.sections.registrations = rows.length ? 'ok' : 'empty';
 
     const groups = new Map<string, { employee_id: string | null; employee_name: string | null; class: string | null; leave_type: string | null; count: number; hours: number[]; days: number[]; minutes: number[] }>();
