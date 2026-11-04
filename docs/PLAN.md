@@ -175,7 +175,7 @@ Authenticate in the same OS/user/distribution context first. Verify WSL launch p
 ## 9. Ordered milestones and decisions
 
 1. **Validate contracts:** pin dependencies, confirm minimum client versions, record token-probe results, request API-client registration, and confirm read scopes. *API client registered and read scopes confirmed (2026-11-04); see the discovery doc.*
-2. **Establish the boundary:** scaffold CLI/SDK, endpoint allowlist, schemas, redaction, and negative transport tests.
+2. **Establish the boundary:** scaffold CLI/SDK, endpoint allowlist, schemas, redaction, and negative transport tests. *Done (2026-11-04). Every allowlisted path was checked against `swagger.json`; `/v2/employments` and `/v2/paySlips/{id}` exist. `/v2/apiKeys` is undocumented and allowlisted only for the scope self-check, not for tools. `employees.nationalID` is excluded so a CPR number never appears in a URL.*
 3. **Complete durable auth:** secure stores, WSL helper, locking, renewal, status/logout, and reboot tests. This gates the persistence promise.
 4. **Implement tools:** company discovery first, then employee resolution, payroll/payslip joins, and time summaries.
 5. **Add interactive mode:** protected browser bootstrap.
