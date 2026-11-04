@@ -95,7 +95,7 @@ async function browserLoginCommand(opts: { backend: BackendChoice; acceptUserSes
     process.stderr.write(`Profile "${s.profile}" is logged in with a read-only API key; this replaces it. Use --profile <name> to keep both.\n`);
   }
   if (!opts.acceptUserSession) {
-    const answer = await ask('Type "yes" to continue: ');
+    const answer = await ask('Type "yes" to continue: ', { nonInteractiveHint: 'Run it in a terminal, or add --accept-user-session.' });
     if (answer.toLowerCase() !== 'yes') {
       out('Cancelled.');
       process.exitCode = 1;

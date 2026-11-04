@@ -3,11 +3,9 @@ import { Writable } from 'node:stream';
 import { SalaryError } from '../errors.js';
 
 /** Ask on the terminal. With `hidden`, typed characters are not echoed. Prompts go to stderr. */
-export async function ask(question: string, { hidden = false } = {}): Promise<string> {
+export async function ask(question: string, { hidden = false, nonInteractiveHint = 'Run it in a terminal, or use `login --from-env` for development.' } = {}): Promise<string> {
   if (!process.stdin.isTTY) {
-    throw new SalaryError('INVALID_PARAMS', 'login needs an interactive terminal.', {
-      hint: 'Run it in a terminal, or use `login --from-env` for development.',
-    });
+    throw new SalaryError('INVALID_PARAMS', 'login needs an interactive terminal.', { hint: nonInteractiveHint });
   }
   let muted = false;
   const output = new Writable({
