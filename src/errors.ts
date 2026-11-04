@@ -12,6 +12,12 @@ export type ErrorCode =
   | 'CREDENTIALS_REJECTED'
   | 'AUTH_REJECTED'
   | 'SCOPE_REQUIRED'
+  | 'SCOPE_NOT_READ_ONLY'
+  // Local credential store
+  | 'STORE_UNAVAILABLE'
+  | 'STORE_CORRUPT'
+  | 'STORE_LOCKED'
+  | 'LOCK_TIMEOUT'
   // Upstream
   | 'NOT_FOUND'
   | 'UPSTREAM_VALIDATION'

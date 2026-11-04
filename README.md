@@ -2,7 +2,7 @@
 
 This is a local [Model Context Protocol](https://modelcontextprotocol.io) server. It gives an AI assistant **read-only** access to a [Shine Salary](https://app.salary.dk) account. Shine Salary was formerly Salary.dk.
 
-Status: **milestone 2 of 6** (read-only HTTP boundary). `serve` runs a working MCP server over stdio, but it exposes no tools yet. Secure credential storage (`login`/`logout`) is milestone 3.
+Status: **milestone 3 of 6** (durable authentication). `login` stores credentials in a secure local store, and they survive restarts. `serve` runs a working MCP server over stdio, but it exposes no tools yet (milestone 4). See [`docs/AUTH.md`](docs/AUTH.md).
 
 ## What exists
 
@@ -12,7 +12,9 @@ Status: **milestone 2 of 6** (read-only HTTP boundary). `serve` runs a working M
 | `src/api/request.ts`, `src/api/client.ts` | Builds URLs on `https://api.salary.dk` only, validates every parameter, blocks redirects, caps response size, and retries 429/502–504 within a budget. Handles 401 with one renewal and one replay. |
 | `src/auth/api-client.ts` | The only non-GET call: `POST /v2/auth` with the API client ID, secret and company API key. |
 | `src/privacy/redact.ts`, `src/log.ts` | Masks CPR, bank and IBAN identifiers, drops personal fields, and redacts secrets from logs (stderr only). |
-| `src/server.ts`, `src/cli.ts` | `serve` (stdio, 2026-07-28 protocol plus 2025-era initialize) and `status [--check]`. |
+| `src/auth/store.ts`, `src/auth/backends/`, `src/auth/secure-fs.ts` | Profile state and secrets: OS keychain, or on WSL AES-256-GCM files with a Windows-DPAPI-wrapped key. |
+| `src/auth/token-manager.ts`, `src/auth/lock.ts` | Token renewal shared between processes under a lock file; logout reaches running servers. |
+| `src/server.ts`, `src/cli.ts` | `serve` (stdio, 2026-07-28 protocol plus 2025-era initialize), `login`, `logout`, `status [--check]`. |
 
 ## Development
 
@@ -23,7 +25,9 @@ npm ci
 npm run check        # typecheck, build, unit + stdio tests (no network)
 ```
 
-To try the real API, copy `.env.example` to `.env` and fill in the API client ID, secret and company API key. `.env` is git-ignored. Reading credentials from the environment is **for development only** and stays off unless you turn it on:
+To log in for real, run `shine-salary-mcp login` (or `node dist/cli.js login`); see [`docs/AUTH.md`](docs/AUTH.md).
+
+To try the real API with development credentials instead, copy `.env.example` to `.env` and fill in the API client ID, secret and company API key. `.env` is git-ignored. Reading credentials from the environment is **for development only** and stays off unless you turn it on:
 
 ```bash
 npm run build
@@ -42,6 +46,7 @@ Both commands send only GET requests after logging in. They print company names,
 | `commander` | 15.0.0 |
 | `typescript` | 7.0.2 |
 | `vitest` | 5.0.5 |
+| `@napi-rs/keyring` | 2.1.2 |
 | `@types/node` | 24.19.2 |
 
 ## Docs

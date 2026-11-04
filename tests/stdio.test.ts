@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -10,7 +12,7 @@ async function runServe(lines: object[], env: Record<string, string> = {}): Prom
   const child = spawn(process.execPath, [CLI, 'serve'], {
     stdio: ['pipe', 'pipe', 'pipe'],
     // No credentials and no network: serve must start without them.
-    env: { PATH: process.env.PATH ?? '', ...env },
+    env: { PATH: process.env.PATH ?? '', SHINE_SALARY_CONFIG_DIR: join(tmpdir(), `ssm-stdio-${process.pid}`), ...env },
   });
   let stdout = '';
   let stderr = '';
@@ -51,6 +53,7 @@ describe('serve over stdio (built dist/cli.js)', () => {
     expect(messages[0]!.result!.supportedVersions).toContain('2026-07-28');
     expect(messages[1]!.result!.tools).toEqual([]);
     expect(stderr).toContain('serve: starting');
+    expect(stderr).toContain('not logged in');
   });
 
   it('still serves a 2025-era initialize', async () => {

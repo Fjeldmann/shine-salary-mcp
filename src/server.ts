@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio, type StdioServerHandle } from '@modelcontextprotocol/server/stdio';
+import type { ProfileStore } from './auth/store.js';
 import { log } from './log.js';
 import { NAME, VERSION } from './version.js';
 
@@ -19,8 +20,13 @@ export function createServer(): McpServer {
   return server;
 }
 
-export function serve(): StdioServerHandle {
+export function serve(store?: ProfileStore): StdioServerHandle {
   log('info', 'serve: starting stdio server');
+  // Tools arrive in milestone 4; for now only report whether login has happened.
+  store
+    ?.readState()
+    .then((s) => log(s ? 'info' : 'warn', s ? 'serve: credentials configured' : 'serve: not logged in; run `shine-salary-mcp login`', s ? { backend: s.backend } : {}))
+    .catch((e: unknown) => log('warn', 'serve: credential state unreadable', { code: (e as { code?: string }).code ?? 'unknown' }));
   return serveStdio(() => createServer(), {
     onerror: (err) => log('error', 'serve: transport error', { name: err.name }),
   });

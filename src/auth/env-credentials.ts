@@ -25,6 +25,11 @@ export function readDevEnvCredentials(env: NodeJS.ProcessEnv = process.env): Api
       hint: `For development, set ${DEV_FLAG}=1 and provide ${Object.values(ENV_NAMES).join(', ')}.`,
     });
   }
+  return readEnvCredentials(env);
+}
+
+/** Read the credential variables without the dev flag (used by an explicit `login --from-env`). */
+export function readEnvCredentials(env: NodeJS.ProcessEnv = process.env): ApiCredentials {
   const creds = {
     apiClientID: env[ENV_NAMES.apiClientID]?.trim() ?? '',
     apiClientSecret: env[ENV_NAMES.apiClientSecret]?.trim() ?? '',
