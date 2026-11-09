@@ -6,9 +6,15 @@ import { SalaryError } from '../errors.js';
 /**
  * Owner-only file handling for local auth state: directories 0700, files
  * 0600, no symlinks, ownership checked, bounded reads, atomic replacement.
- * POSIX only; on Windows the keyring backend is used instead.
+ *
+ * Mode bits only exist on POSIX. Node reports every writable file on Windows
+ * as 0666, whatever its ACL says, so the check would refuse every file there.
+ * On Windows the profile sits in the user-only %APPDATA% and secrets go to the
+ * Credential Manager (keyring backend), so these files hold nothing secret.
+ * WSL reports as linux and keeps the check.
  */
 
+const ENFORCE_MODES = process.platform !== 'win32';
 const NOFOLLOW = constants.O_NOFOLLOW ?? 0;
 const uid = () => (typeof process.getuid === 'function' ? process.getuid() : undefined);
 
@@ -24,7 +30,7 @@ export async function ensurePrivateDir(dir: string): Promise<void> {
   if (st.isSymbolicLink() || !st.isDirectory()) throw unsafe(dir, 'not a real directory');
   const me = uid();
   if (me !== undefined && st.uid !== me) throw unsafe(dir, 'owned by another user');
-  if ((st.mode & 0o077) !== 0) await fs.chmod(dir, 0o700);
+  if (ENFORCE_MODES && (st.mode & 0o077) !== 0) await fs.chmod(dir, 0o700);
 }
 
 /** Read a private file. Returns undefined if it does not exist. */
@@ -43,7 +49,7 @@ export async function readPrivateFile(path: string, maxBytes = 64 * 1024): Promi
     if (!st.isFile()) throw unsafe(path, 'not a regular file');
     const me = uid();
     if (me !== undefined && st.uid !== me) throw unsafe(path, 'owned by another user');
-    if ((st.mode & 0o077) !== 0) throw unsafe(path, 'readable by other users');
+    if (ENFORCE_MODES && (st.mode & 0o077) !== 0) throw unsafe(path, 'readable by other users');
     if (st.size > maxBytes) throw unsafe(path, 'too large');
     const buf = Buffer.alloc(st.size);
     const { bytesRead } = await handle.read(buf, 0, st.size, 0);

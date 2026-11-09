@@ -34,7 +34,7 @@ See [docs/AUTH.md](docs/AUTH.md) for details.
 
 ## Known limits
 
-- Native Windows outside WSL is untested; the file checks assume POSIX permissions. Use the WSL setup in [docs/CLIENTS.md](docs/CLIENTS.md).
+- Native Windows has no POSIX modes, so file mode and ownership checks don't apply there, and symlinks are refused only on write. Secrets live in the Windows Credential Manager, and the profile folder relies on the user-only ACL of `%APPDATA%`. The WSL setup in [docs/CLIENTS.md](docs/CLIENTS.md) keeps the full checks.
 - `/v2/apiKeys` is undocumented. It is used only by `login` and `status --check` to read the key's scopes.
 - Paginated joins are not transactional: results built from several requests can mix states if Salary changes data between them.
 

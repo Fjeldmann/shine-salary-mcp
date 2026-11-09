@@ -18,8 +18,11 @@ async function codeOf(p: Promise<unknown>) {
   return 'no error';
 }
 
+const windows = process.platform === 'win32';
+
 describe('paths', () => {
-  it('follows platform conventions and rejects unsafe profile names', () => {
+  // The expected values are POSIX paths, which path.join can't produce on Windows.
+  it.skipIf(windows)('follows platform conventions and rejects unsafe profile names', () => {
     expect(configRoot({ XDG_CONFIG_HOME: '/x' }, 'linux', '/h')).toBe('/x/shine-salary-mcp');
     expect(configRoot({}, 'linux', '/h')).toBe('/h/.config/shine-salary-mcp');
     expect(configRoot({}, 'darwin', '/h')).toBe('/h/Library/Application Support/shine-salary-mcp');
@@ -34,13 +37,16 @@ describe('secure files', () => {
     const root = await tempRoot();
     const file = join(root, 'a', 'secret.json');
     await writePrivateFileAtomic(file, 'hello');
-    expect((await stat(file)).mode & 0o777).toBe(0o600);
-    expect((await stat(join(root, 'a'))).mode & 0o777).toBe(0o700);
+    if (!windows) {
+      expect((await stat(file)).mode & 0o777).toBe(0o600);
+      expect((await stat(join(root, 'a'))).mode & 0o777).toBe(0o700);
+    }
     expect(await readPrivateFile(file)).toBe('hello');
     expect(await readPrivateFile(join(root, 'a', 'missing'))).toBeUndefined();
   });
 
-  it('refuses symlinks on read and write', async () => {
+  // Creating a symlink on Windows needs elevation or developer mode.
+  it.skipIf(windows)('refuses symlinks on read and write', async () => {
     const root = await tempRoot();
     await writeFile(join(root, 'target'), 'x', { mode: 0o600 });
     await symlink(join(root, 'target'), join(root, 'link'));
@@ -53,7 +59,7 @@ describe('secure files', () => {
     const root = await tempRoot();
     await writeFile(join(root, 'open'), 'x', { mode: 0o644 });
     await chmod(join(root, 'open'), 0o644);
-    expect(await codeOf(readPrivateFile(join(root, 'open')))).toBe('STORE_CORRUPT');
+    expect(await codeOf(readPrivateFile(join(root, 'open')))).toBe(windows ? 'no error' : 'STORE_CORRUPT');
     await writeFile(join(root, 'big'), 'x'.repeat(100), { mode: 0o600 });
     expect(await codeOf(readPrivateFile(join(root, 'big'), 10))).toBe('STORE_CORRUPT');
   });
